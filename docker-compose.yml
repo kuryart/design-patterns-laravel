@@ -1,0 +1,53 @@
+version: "3.7"
+services:
+  app:
+    build:
+      args:
+        user: admin
+        uid: 1000
+      context: ./
+      dockerfile: Dockerfile
+    image: laravel-design-patterns
+    container_name: laravel-design-patterns-app
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./:/var/www
+    networks:
+      - laravel-design-patterns
+
+  db:
+    image: mysql:8.0.25
+    container_name: laravel-design-patterns-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "true"
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_USER: ${DB_USERNAME}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+    #   MYSQL_PASSWORD: ${DB_PASSWORD}
+    #   MYSQL_USER: ${DB_USERNAME}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - ./docker-compose/mysql:/docker-entrypoint-initdb.d
+    networks:
+      - laravel-design-patterns
+    ports:
+      - "33062:3306"
+
+  nginx:
+    image: nginx:alpine
+    container_name: laravel-design-patterns-nginx
+    restart: unless-stopped
+    ports:
+      - 8001:80
+    volumes:
+      - ./:/var/www
+      - ./docker-compose/nginx:/etc/nginx/conf.d/
+    networks:
+      - laravel-design-patterns
+
+networks:
+  laravel-design-patterns:
+    driver: bridge
